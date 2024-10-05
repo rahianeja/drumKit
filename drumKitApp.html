@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drum Kit</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        .key {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: absolute;
+            border: 5px solid #222;
+            background: radial-gradient(circle, #f7b733, #fc4a1a);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .key:active, .key.playing {
+            transform: scale(0.9);
+            box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.9);
+        }
+        .key::after {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        .key-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        .key.kick {
+            background: radial-gradient(circle, #ff8c00, #e65100);
+            transform: rotate(0deg) translate(200px) rotate(0deg);
+        }
+        .key.snare {
+            background: radial-gradient(circle, #b0bec5, #78909c);
+            transform: rotate(60deg) translate(200px) rotate(-60deg);
+        }
+        .key.hihat {
+            background: radial-gradient(circle, #ffd700, #ff8c00);
+            transform: rotate(120deg) translate(200px) rotate(-120deg);
+        }
+        .key.tom {
+            background: radial-gradient(circle, #8e44ad, #5e3370);
+            transform: rotate(180deg) translate(200px) rotate(-180deg);
+        }
+        .key.floor-tom {
+            background: radial-gradient(circle, #4caf50, #2e7d32);
+            transform: rotate(240deg) translate(200px) rotate(-240deg);
+        }
+        .key.bass-drum {
+            background: radial-gradient(circle, #ff5722, #d84315);
+            transform: rotate(300deg) translate(200px) rotate(-300deg);
+        }
+        .key.ride-cymbal {
+            background: radial-gradient(circle, #ffeb3b, #fbc02d);
+            transform: rotate(360deg) translate(200px) rotate(-360deg);
+        }
+        body {
+            cursor: url('https://cdn-icons-png.flaticon.com/512/64/64567.png'), auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="key bass-drum" data-key="66"><span class="key-label">B - Bass Drum</span></div>
+    <div class="key kick" data-key="65"><span class="key-label">A - Kick</span></div>
+    <div class="key snare" data-key="83"><span class="key-label">S - Snare</span></div>
+    <div class="key hihat" data-key="68"><span class="key-label">D - Hi-Hat</span></div>
+    <div class="key tom" data-key="70"><span class="key-label">F - Tom</span></div>
+    <div class="key floor-tom" data-key="76"><span class="key-label">L - Floor Tom</span></div>
+    <div class="key ride-cymbal" data-key="82"><span class="key-label">R - Ride Cymbal</span></div>
+
+    <script>
+        let audioContext;
+
+        function initializeAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log("AudioContext initialized");
+            }
+        }
+
+        function playSound(event) {
+            initializeAudioContext();
+
+            let key;
+            if (event.type === 'keydown') {
+                key = event.keyCode;
+            } else if (event.type === 'click') {
+                key = this.dataset.key;
+            }
+
+            const keyDiv = document.querySelector(`.key[data-key="${key}"]`);
+
+            if (!keyDiv) {
+                console.log("No keyDiv found for key:", key);
+                return;
+            }
+
+            let oscillator = audioContext.createOscillator();
+            let gainNode = audioContext.createGain();
+            let delayNode = audioContext.createDelay();
+            delayNode.delayTime.value = 0.25; // Echo effect
+
+            oscillator.connect(gainNode);
+            gainNode.connect(delayNode);
+            delayNode.connect(audioContext.destination);
+
+            switch (Number(key)) {
+                case 65: // Kick
+                    oscillator.type = "sine";
+                    oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                    break;
+                case 83: // Snare
+                    oscillator.type = "triangle";
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+                    break;
+                case 68: // Hi-Hat
+                    oscillator.type = "square";
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                    break;
+                case 70: // Tom
+                    oscillator.type = "sine";
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.7, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                    break;
+                case 76: // Floor Tom
+                    oscillator.type = "sine";
+                    oscillator.frequency.setValueAtTime(120, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.8, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6);
+                    break;
+                case 66: // Bass Drum
+                    oscillator.type = "sine";
+                    oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(1.5, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.7);
+                    break;
+                case 82: // Ride Cymbal
+                    oscillator.type = "triangle";
+                    oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                    break;
+                default:
+                    console.log("Key not mapped:", key);
+                    return;
+            }
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+
+            keyDiv.classList.add('playing');
+            setTimeout(() => keyDiv.classList.remove('playing'), 100);
+        }
+
+        document.body.addEventListener('click', initializeAudioContext, { once: true });
+        const keyElements = document.querySelectorAll('.key');
+        keyElements.forEach(key => key.addEventListener('click', playSound));
+        window.addEventListener('keydown', playSound);
+    </script>
+</body>
+</html>
